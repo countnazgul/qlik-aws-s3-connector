@@ -1,0 +1,27 @@
+﻿<Window x:Class="QlikAWSS3Connector.ConnectionConfig"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:QlikAWSS3Connector"
+             Title="Connect to AWS S3" Height="184.374" Width="446.265" ShowInTaskbar="False" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" DataContext="{Binding}" Icon="aws_s3.ico" Loaded="Window_Loaded">
+    <Window.Resources>
+        <ObjectDataProvider x:Key="Choices" ObjectType="{x:Type local:CollectionData}" MethodName="GetChoices"/>
+    </Window.Resources>
+    <Grid>
+        <Button KeyboardNavigation.TabIndex="4" Content="OK" Height="23" Margin="0,96,90,0" Name="okButton" VerticalAlignment="Top" IsDefault="True" Click="okBbutton_Click" HorizontalAlignment="Right" Width="75" RenderTransformOrigin="0.71,0.528" />
+        <Button KeyboardNavigation.TabIndex="5" Content="Cancel" Height="23" Margin="0,96,10,0" Name="button2" VerticalAlignment="Top" IsCancel="True" IsDefault="False" HorizontalAlignment="Right" Width="75" />
+        <TextBox KeyboardNavigation.TabIndex="0" Height="23" HorizontalAlignment="Right" Margin="0,12,10,0" Name="accessKey" VerticalAlignment="Top" Width="329" />
+        <Label Content="Access Key" Height="23" HorizontalAlignment="Right" Margin="0,12,344,0" Name="label3" VerticalAlignment="Top" Width="70" FontSize="10px"/>
+        <Label Content="Secret Key" Height="23" HorizontalAlignment="Right" Margin="0,40,344,0" Name="label4" VerticalAlignment="Top" Width="70" FontSize="10px"/>
+
+        <ComboBox KeyboardNavigation.TabIndex="2" Name="awsRegion" Text="Is not open" Height="23" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,68,10,0" Width="329"     
+            ItemsSource="{Binding Source={StaticResource Choices}}"                  
+            SelectedValuePath="Key"
+            DisplayMemberPath="Value"    
+            SelectedValue="{Binding myViewModelProperty}" SelectionChanged="comboBox1_SelectionChanged">
+        </ComboBox>
+        <PasswordBox KeyboardNavigation.TabIndex="1" Name="secretKey" Height="23"  HorizontalAlignment="Right" Margin="0,40,10,0" VerticalAlignment="Top" Width="329" />
+        <Label Content="AWS Region" Height="28" HorizontalAlignment="Right" Margin="0,68,344,0" x:Name="label4_Copy" VerticalAlignment="Top" Width="70" FontSize="10px" />
+        <Button KeyboardNavigation.TabIndex="3" Content="Test" Height="23" Margin="0,96,170,0" x:Name="testButton" VerticalAlignment="Top" IsDefault="True" Click="testBbutton_Click" HorizontalAlignment="Right" Width="75" RenderTransformOrigin="0.71,0.528" />
+
+    </Grid>
+</Window>
