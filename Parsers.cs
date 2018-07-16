@@ -48,15 +48,16 @@ namespace QlikAWSS3Connector
 
         public static IDictionary<string, string> GetWhereFields(string query, string tableName)
         {
+            
             IDictionary<string, string> dict = new Dictionary<string, string>();
 
             try
             {
                 var b = query.Substring(query.ToLower().IndexOf("where"));
-                b = b.ToLower();
-                b = b.Replace("where", "");
 
-                var c = b.Split(new[] { "and" }, StringSplitOptions.None);
+            b = b.Substring(6);
+
+            var c = b.Split(new[] { "and" }, StringSplitOptions.None);
 
                 for (int i = 0; i < c.Length; i++)
                 {
@@ -67,7 +68,7 @@ namespace QlikAWSS3Connector
                     value = value.Replace("=", "").Trim();
                     value = value.Replace("'", "");
 
-                    dict.Add(g[0].Trim(), value.Trim());
+                    dict.Add(g[0].ToLower().Trim(), value.Trim());
                 }
 
             }

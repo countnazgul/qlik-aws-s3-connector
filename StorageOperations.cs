@@ -14,38 +14,26 @@ namespace QlikAWSS3Connector
     class StorageOperations
     {
 
-        public static QvxDataTable ListBuckets(QvxTable bucketsTable, IDictionary<string, string> fields)
+        public static QvxDataTable ListBuckets(QvxTable bucketsTable, IDictionary<string, string> MParameters)
         {
-            bucketsTable.GetRows = ListBucketsRows(bucketsTable, fields);
+            bucketsTable.GetRows = ListBucketsRows(bucketsTable, MParameters);
 
             return new QvxDataTable(bucketsTable);
         }
 
-        public static QvxTable.GetRowsHandler ListBucketsRows(QvxTable table, IDictionary<string, string> fields)
+        public static QvxTable.GetRowsHandler ListBucketsRows(QvxTable table, IDictionary<string, string> MParameters)
         {
             RegionEndpoint region = null;
             AmazonS3Client s3Client = null;
 
             string GCPProjectId = "";
 
-            //try
-            //{
-            //    var JSONObj = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(jsonCredentials);
-            //    GCPProjectId = JSONObj["project_id"];
-            //}
-            //catch (Exception ex)
-            //{
-            //    QvxLog.Log(QvxLogFacility.Application, QvxLogSeverity.Error, ex.Message);
-            //    throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_COMMAND, "Error parsing the JSON credentials file.");
-            //}
             List<QvxDataRow> rows = new List<QvxDataRow>();
-            fields.TryGetValue("access-key", out string accessKey);
-            fields.TryGetValue("secret-key-encrypted", out string secretKeyEncrypted);
-            fields.TryGetValue("aws-region", out string awsRegion);
+            MParameters.TryGetValue("access-key", out string accessKey);
+            MParameters.TryGetValue("secret-key-encrypted", out string secretKeyEncrypted);
+            MParameters.TryGetValue("aws-region", out string awsRegion);
 
             string secretKey = EncryptDecrypt.DecryptString(secretKeyEncrypted);
-
-            QvxLog.Log(QvxLogFacility.Application, QvxLogSeverity.Error, String.Format("access --> {0} secret --> {1} region --> {2}", accessKey, secretKey, awsRegion));
 
             return () =>
             {             
@@ -61,12 +49,6 @@ namespace QlikAWSS3Connector
                 }
 
                 ListBucketsResponse response = s3Client.ListBuckets();
-
-                //foreach (S3Bucket bucket in response.Buckets)
-                //{
-                //    Console.WriteLine("You own Bucket with name: {0}", bucket.BucketName);
-                //}
-
 
                 int length = 0;
                 foreach (S3Bucket bucket in response.Buckets)
@@ -93,16 +75,15 @@ namespace QlikAWSS3Connector
             };
         }
 
-
-
-        public static QvxDataTable ListBucketObjects(QvxTable bucketObjectsTable, IDictionary<string, string> fields, string jsonCredentials)
+        
+        public static QvxDataTable ListBucketObjects(QvxTable bucketObjectsTable, IDictionary<string, string> fields, IDictionary<string, string> MParameters)
         {
-            bucketObjectsTable.GetRows = ListBucketObjectsRows(fields, bucketObjectsTable, jsonCredentials);
+            bucketObjectsTable.GetRows = ListBucketObjectsRows(fields, bucketObjectsTable, MParameters);
 
             return new QvxDataTable(bucketObjectsTable);
         }
 
-        public static QvxTable.GetRowsHandler ListBucketObjectsRows(IDictionary<string, string> fields, QvxTable table, string jsonCredentials)
+        public static QvxTable.GetRowsHandler ListBucketObjectsRows(IDictionary<string, string> fields, QvxTable table, IDictionary<string, string> MParameters)
         {
             return () =>
             {
@@ -111,20 +92,21 @@ namespace QlikAWSS3Connector
                 AmazonS3Client s3Client = null;
                 ListObjectsResponse response = null;
 
-                //fields.TryGetValue("bucketname", out string bucketName);
+                MParameters.TryGetValue("access-key", out string accessKey);
+                MParameters.TryGetValue("secret-key-encrypted", out string secretKeyEncrypted);
+                MParameters.TryGetValue("aws-region", out string awsRegion);
 
-                //if (String.IsNullOrEmpty(bucketName))
-                //{
-                //    throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_COMMAND, String.Format("Missing required param: {0}", "BucketName"));
-                //}
+                string secretKey = EncryptDecrypt.DecryptString(secretKeyEncrypted);
+
+                fields.TryGetValue("bucketname", out string bucketName);
 
                 try
                 {
-                    region = RegionEndpoint.GetBySystemName("eu-west-2");
-                    s3Client = new AmazonS3Client("AKIAJJLWV4VLV6NVHAVQ", "+aFLxMPbjDmtul2qs1Uy5qtb9I66Q/bexaw+H8YW", region);
+                    region = RegionEndpoint.GetBySystemName(awsRegion);
+                    s3Client = new AmazonS3Client(accessKey, secretKey, region);
                     ListObjectsRequest request = new ListObjectsRequest
                     {
-                        BucketName = "qlik-snippets"
+                        BucketName = bucketName
                     };
 
                     response = s3Client.ListObjects(request);
@@ -146,7 +128,7 @@ namespace QlikAWSS3Connector
                 catch (Exception ex)
                 {
                     QvxLog.Log(QvxLogFacility.Application, QvxLogSeverity.Error, ex.Message);
-                    throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_COMMAND, "Error getting the data from Google Storage");
+                    throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_COMMAND, "Error getting the data from AWS S3");
                 }
 
                 QvxLog.Log(QvxLogFacility.Application, QvxLogSeverity.Error, rows.Count.ToString());
@@ -155,7 +137,7 @@ namespace QlikAWSS3Connector
         }
 
 
-        public static QvxDataTable DownloadObject(QvxTable downloadObjectTable, IDictionary<string, string> fields, string jsonCredentials)
+        public static QvxDataTable DownloadObject(QvxTable downloadObjectTable, IDictionary<string, string> fields, IDictionary<string, string> MParameters)
         {
             RegionEndpoint region = null;
             AmazonS3Client s3Client = null;
@@ -163,9 +145,13 @@ namespace QlikAWSS3Connector
             fields.TryGetValue("bucketname", out string bucketName);
             fields.TryGetValue("objectname", out string objectName);
             fields.TryGetValue("localpath", out string localPath);
-            fields.TryGetValue("localpath", out string keyName);
-          
+            
+            MParameters.TryGetValue("access-key", out string accessKey);
+            MParameters.TryGetValue("secret-key-encrypted", out string secretKeyEncrypted);
+            MParameters.TryGetValue("aws-region", out string awsRegion);
 
+            string secretKey = EncryptDecrypt.DecryptString(secretKeyEncrypted);
+            
             if (String.IsNullOrEmpty(bucketName))
             {
                 throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_COMMAND, String.Format("Missing required param: {0}", "BucketName"));
@@ -184,25 +170,20 @@ namespace QlikAWSS3Connector
 
             try
             {
-                localPath = localPath ?? Path.GetFileName(objectName);
-
-                region = RegionEndpoint.GetBySystemName("eu-west-2");
-                s3Client = new AmazonS3Client("AKIAJJLWV4VLV6NVHAVQ", "+aFLxMPbjDmtul2qs1Uy5qtb9I66Q/bexaw+H8YW", region);
+                region = RegionEndpoint.GetBySystemName(awsRegion);
+                s3Client = new AmazonS3Client(accessKey, secretKey, region);
 
                 GetObjectRequest request = new GetObjectRequest()
                 {
                     BucketName = bucketName,
-                    Key = keyName
+                    Key = objectName
                 };
 
                 using (GetObjectResponse response = s3Client.GetObject(request))
                 {
                     string title = response.Metadata["x-amz-meta-title"];
-                    string dest = Path.Combine(localPath);
-                    if (!File.Exists(dest))
-                    {
-                        response.WriteResponseStreamToFile(dest);
-                    }
+                    string dest = localPath;
+                    response.WriteResponseStreamToFile(dest);
                 }
 
                 downloadObjectTable.GetRows = DownloadObjectRows(downloadObjectTable);
@@ -211,7 +192,7 @@ namespace QlikAWSS3Connector
             catch (Exception ex)
             {
                 QvxLog.Log(QvxLogFacility.Application, QvxLogSeverity.Error, ex.Message);
-                throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_COMMAND, "Error downloading object from Google Storage");
+                throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_COMMAND, "Error downloading object from AWS S3: " + ex.Message);
             }
             return new QvxDataTable(downloadObjectTable);
 

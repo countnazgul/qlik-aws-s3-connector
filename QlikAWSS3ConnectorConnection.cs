@@ -11,26 +11,12 @@ namespace QlikAWSS3Connector
 {
     internal class QlikAWSS3ConnectorConnection : QvxConnection
     {
-        string jsonPath = "";
-        string jsonCredentials = "";
-
         public override void Init()
         {
             QvxLog.SetLogLevels(false, true);
 
             QvxLog.Log(QvxLogFacility.Application, QvxLogSeverity.Notice, "Init()");
             
-            //this.MParameters.TryGetValue("jsonPath", out jsonPath);
-
-            //try
-            //{
-            //    jsonCredentials = File.ReadAllText(jsonPath);
-            //} catch (Exception ex)
-            //{
-            //    QvxLog.Log(QvxLogFacility.Application, QvxLogSeverity.Error, ex.Message);
-            //    throw new QvxPleaseSendReplyException(QvxResult.QVX_UNKNOWN_ERROR, String.Format("Unable to read {0}", jsonPath));
-            //}
-
             var bucketsListFields = new QvxField[]
                 {
                     new QvxField("BucketName", QvxFieldType.QVX_TEXT, QvxNullRepresentation.QVX_NULL_FLAG_SUPPRESS_DATA, FieldAttrType.ASCII),
@@ -71,17 +57,17 @@ namespace QlikAWSS3Connector
                         {
                             TableName = "DownloadObject",
                             Fields = dummyFields
-                        },
-                    new QvxTable
-                        {
-                            TableName = "UploadObject",
-                            Fields = dummyFields
-                        },
-                    new QvxTable
-                        {
-                            TableName = "DeleteLocalObject",
-                            Fields = dummyFields
                         }
+                    //new QvxTable
+                    //    {
+                    //        TableName = "UploadObject",
+                    //        Fields = dummyFields
+                    //    },
+                    //new QvxTable
+                    //    {
+                    //        TableName = "DeleteLocalObject",
+                    //        Fields = dummyFields
+                    //    }
                 };
         }
 
@@ -103,11 +89,11 @@ namespace QlikAWSS3Connector
                     returnTable = a;
                     break;
                 case "bucketobjects":
-                    QvxDataTable a1 = StorageOperations.ListBucketObjects(FindTable("BucketObjects", MTables), fields, jsonCredentials);                    
+                    QvxDataTable a1 = StorageOperations.ListBucketObjects(FindTable("BucketObjects", MTables), fields, MParameters);                    
                     returnTable = a1;
                     break;
                 case "downloadobject":
-                    QvxDataTable downloadObj = StorageOperations.DownloadObject(FindTable("DownloadObject", MTables), fields, jsonCredentials);
+                    QvxDataTable downloadObj = StorageOperations.DownloadObject(FindTable("DownloadObject", MTables), fields, MParameters);
                     returnTable = downloadObj;
                     break;
                 case "uploadobject":
